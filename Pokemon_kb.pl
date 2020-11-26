@@ -108,26 +108,36 @@ fact( [wilson, armed]).
 ruleset([_]). 
 
 %% General logical and set-theoretic rules
+%%The subclass relation is transitive
 rule( logic, [[C1, subclass_of, C2], [C2, subclass_of, C3]] ==> [C1, subclass_of, C3] ).
+%%Any item belonging to a class also belongs to any superclasses of that class.
 rule( logic, [[X, is, C1], [C1, subclass_of, C2]]  ==>  [X, is, C2] ).
+%%The property of being is transitive 
 rule( logic, [[X, is, C1], [C1, is, C2]]  ==>  [X, is, C2] ).
 
 %% Taxonomic relationships regarding the concept vocabulary
+%%A parent of a parent is a grandparent
 rule( taxonomy, [[Z, is_parent_of, Y], [Y, is_parent_of, X]] ==> [Z, is_grandparent_of, X]). 
+%%Someone who has a parent is a child of that parent  
 rule( taxonomy, [[X, is_parent_of, Y]] ==> [Y, is_child_of, X]). 
+%%Someone who has a grandparent is a grandchild of that grandparent
 rule( taxonomy, [[Z, is_grandparent_of, X]] ==> [X, is_grandchild_of, Z]).
-rule( taxonomy, [[X, is, C1], [Y, is, C1], [C1, subclass_of, pokemon], [X, attacks, Y]] ==> [X, neutral_to, Y]). 
 
 %% Other semantic relations holding among concepts. 
+%%If a pokemon is resistant to another, that means they cannot be beaten by them
 rule( semantic, [[X, resistant_to, Y]] ==> -[Y, beats, X]).
+%%If a pokemon is neutral to another, they cannot beat them
 rule( semantic, [[X, neutral_to, Y]] ==> -[X, beats, Y]). 
+%%If a pokemon is beaten, they do not beat their opponent.
 rule( semantic, [[X, beats, Y]] ==> -[Y, beats, X]).
+%%If a pokemon attacks another, the other is attacked by them
 rule( semantic, [[X, attacks, Y]] ==> [Y, attacked_by, X]).
+%%Two pokemon of the same type are neutral to each other in an attack
+rule( semantic, [[X, is, C1], [Y, is, C1], [C1, subclass_of, pokemon], [X, attacks, Y]] ==> [X, neutral_to, Y]).
      
 %% Some domain specific inference rules:
         
 %%Strength rules denote who is stronger than who when attacking
-rule( strength, [[X, is, fighting], [Y, is, normal]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, normal], [Y, is, flying]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, flying], [Y, is, grass]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, poison], [Y, is, grass]] ==> [X, stronger_than, Y]).
@@ -144,6 +154,7 @@ rule( strength, [[X, is, grass], [Y, is, water]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, water], [Y, is, fire]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, water], [Y, is, ground]] ==> [X, stronger_than, Y]).
 rule( strength, [[X, is, dark], [Y, is, psychic]] ==> [X, stronger_than, Y]).
+rule( strength, [[X, is, fighting], [Y, is, normal]] ==> [X, stronger_than, Y]).
 
 %% Weakness rules denote who is weaker than who when attacking - 
 %% weakness is different and is not simply the inverse of the above set of rules
@@ -160,13 +171,19 @@ rule( weakness, [[X, is, grass], [Y, is, fire]] ==> [X, weaker_than, Y]).
 rule( weakness, [[X, is, water], [Y, is, grass]] ==> [X, weaker_than, Y]).
 
 %%Rules for evolution
+%% When starter pokemon reach a certain age (above age 8), they have the ability to evolve
 rule( evolve, [[X, is, starter_pokemon], [X, is_age, B], test(8<B)] ==> [X, can_evolve]).  
 
 %%Rules for attacking
+%%If a pokemon is stronger than another and attacks, the other becomes vulnerable to them
 rule( attacks, [[X, stronger_than, Y], [X, attacks, Y]] ==> [Y, vulnerable_to, X]).
+%%If a pokemon is weaker than another and attacks, the opponent becomes resistant to them
 rule( attacks, [[X, weaker_than, Y], [X, attacks, Y]] ==> [Y, resistant_to, X]).
+%%If a pokemon can evolve and is being attacked and is in a vulnerable position, they evolve
 rule( attacks, [[X, can_evolve], [Y, attacks, X], [X, vulnerable_to, Y]] ==> [X, evolves]). 
+%%If a pokemon evolves, they will not be beaten
 rule( attacks, [[Y, attacks, X], [X, evolves]] ==> -[Y, beats, X]).
+%%If a pokemon is armed with defence, they will not be beaten
 rule( attacks, [[Y, attacks, X], [X, armed]] ==> -[Y, beats, X]).
 
 %%Rules for protective parents who are angry at pokemon attacking their children
@@ -174,7 +191,7 @@ rule( attacks, [[Y, attacks, X], [X, armed]] ==> -[Y, beats, X]).
 rule( angry, [[X, vulnerable_to, Y], [Z, is_parent_of, X]] ==> [Z, angry_at, Y]).
 %%If a pokemon is angry at another and stronger than them, they want to attack
 rule( angry, [[X, angry_at, Y], [X, stronger_than, Y]] ==> [X, wants_attack, Y]).
-%%If a pokemon's child is young (<8), they want to defend them
+%%If a pokemon's child is young (< 8), they want to defend them
 rule( angry, [[Z, is_child_of, X], [Z, is_age, A], test(A<8)] ==> [X, wants_defend, Z]).
 
 %%Rules for defence mechanisms      
@@ -200,7 +217,9 @@ rule( default, [\+[X, is, legendary], \+[X, is, pseudo-legendary]] ==> [X, is, o
 %%Rules for what happens when beating another pokemon in a battle
 %%If a pokemon beats a legendary, they become pseudo-legendary
 rule( beat, [[X, beats, Y], [Y, is, legendary]] ==> [X, is, pseudo-legendary]).
+%%If a pokemon is beaten, they faint
 rule( beat, [[X, attacks, Y], [X, beats, Y]] ==> [Y, faints]).
+%%If a pokemon beats another, they gain exp (experience points)
 rule( beat, [[X, attacks, Y], [X, beats, Y]] ==> [X, gains_exp]).
 
 
