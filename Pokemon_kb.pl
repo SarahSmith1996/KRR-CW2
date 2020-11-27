@@ -78,7 +78,7 @@ fact( [mary, is_age, 2] ).
 fact( [wilson, is_age, 11] ).
 fact( [sarahm, is_age, 8] ).
 fact( [zoe, is_age, 37] ).
-fact( [jonny, is_age, 4] ).
+fact( [jonny, is_age, 14] ).
 fact( [shaz, is_age, 52] ).
 fact( [david, is_age, 5] ).
 fact( [vania, is_age, 16] ).
@@ -213,6 +213,10 @@ rule( default, [[X, vulnerable_to, Y], \+[X, being_saved_from, Y], \+[X, armed],
 rule( default, [\+[X, stronger_than, Y], \+[X, weaker_than, Y], [X, attacks, Y]] ==> [X, neutral_to, Y]).
 %%If a pokemon is not legendary or pseudo-legendary, they are ordinary.
 rule( default, [\+[X, is, legendary], \+[X, is, pseudo-legendary]] ==> [X, is, ordinary]). 
+%%If a pokemon wants to attack someone (because they are angry) but does not want to defend, they will not attack
+rule( default, [[X, wants_attack, Y], [Y, attacks, Z], \+[X, wants_defend, Z]] ==> -[X, attacks, Y]). 
+%%If a pokemon wants to defend someone but does not want to attack, they will not attack
+rule( default, [[X, wants_defend, Z], [Y, attacks, Z], \+[X, wants_attack, Y]] ==> -[X, attacks, Y]).
 
 %%Rules for what happens when beating another pokemon in a battle
 %%If a pokemon beats a legendary, they become pseudo-legendary
